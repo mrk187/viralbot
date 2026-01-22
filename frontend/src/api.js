@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://localhost:8082/api';
 
 export const api = {
   getStatus: () => axios.get(`${API_BASE_URL}/status`),
@@ -10,4 +10,8 @@ export const api = {
   generateVideo: (channel) => axios.post(`${API_BASE_URL}/generate/${channel}`),
   generateAll: () => axios.post(`${API_BASE_URL}/generate/all`),
   getQuota: () => axios.get(`${API_BASE_URL}/quota`),
+  getChannels: () => axios.get(`${API_BASE_URL}/channels`),
+  getLogs: () => axios.get(`${API_BASE_URL}/logs`),
+  getSettings: () => axios.get(`${API_BASE_URL}/settings`),
+  updateSettings: (data) => axios.put(`${API_BASE_URL}/settings`, data),
 };

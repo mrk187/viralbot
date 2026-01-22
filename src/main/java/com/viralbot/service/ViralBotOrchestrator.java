@@ -2,17 +2,21 @@ package com.viralbot.service;
 
 import com.viralbot.config.ViralBotConfig;
 import com.viralbot.model.Video;
-import com.viralbot.platform.TikTokService;
+import com.viralbot.model.VideoScene;
 import com.viralbot.platform.YouTubeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
 public class ViralBotOrchestrator {
+    
+    private static final Logger log = Logger.getLogger(ViralBotOrchestrator.class.getName());
     
     private final ViralBotConfig config;
     private final ContentGeneratorService contentGenerator;
@@ -20,12 +24,13 @@ public class ViralBotOrchestrator {
     private final MediaService mediaService;
     private final VideoCreationService videoCreationService;
     private final YouTubeService youtubeService;
-    private final TikTokService tiktokService;
-    
+    private final LogService logService;
+
     @Scheduled(cron = "${viralbot.schedule.cron}")
     public void executeScheduledTask() {
         if (config.getSchedule().isEnabled()) {
-            System.out.println("Starting scheduled video generation and upload");
+            log.info("Starting scheduled video generation and upload");
+            logService.info("Starting scheduled video generation and upload", null);
             processAllChannels();
         }
     }
@@ -35,28 +40,42 @@ public class ViralBotOrchestrator {
             try {
                 processChannel(channel);
             } catch (Exception e) {
-                System.err.println("Error processing channel: " + channel + " - " + e.getMessage());
+                log.severe("Error processing channel: " + channel + " - " + e.getMessage());
+                logService.error("Error processing channel: " + e.getMessage(), channel);
             }
         }
     }
     
     public void processChannel(String channel) {
-        System.out.println("Processing channel: " + channel);
+        log.info("Processing channel: " + channel);
+        logService.info("Processing channel: " + channel, channel);
         
+        int duration = config.getVideo().getDuration();
         String channelDescription = config.getChannel().get(channel).getDescription();
-        String script = contentGenerator.generateScript(channel, channelDescription);
-        System.out.println("Generated script for " + channel + ": " + script.length() + " chars");
         
+        // Generate script
+        String script = contentGenerator.generateScript(channel, channelDescription, duration);
+        log.info("Generated script: " + script.length() + " chars");
+        logService.info("Generated script: " + script.length() + " chars", channel);
+        
+        // Generate audio
         String audioFileName = String.format("%s_%s", channel, UUID.randomUUID());
         String audioPath = ttsService.generateAudio(script, audioFileName);
+        logService.info("Generated audio - " + script.length() + " chars used", channel);
         
-        String backgroundVideoUrl = mediaService.fetchBackgroundVideo(channel);
-        if (backgroundVideoUrl == null) {
+        // Fetch background video
+        String videoUrl = mediaService.fetchBackgroundVideo(channel);
+        
+        if (videoUrl == null) {
+            logService.error("Failed to fetch background video", channel);
             throw new RuntimeException("Failed to fetch background video for channel: " + channel);
         }
+        logService.info("Fetched background video", channel);
         
+        // Create video
         String videoFileName = String.format("%s_%s", channel, UUID.randomUUID());
-        String videoPath = videoCreationService.createVideo(audioPath, backgroundVideoUrl, videoFileName);
+        String videoPath = videoCreationService.createVideoFromBackgroundVideo(audioPath, videoUrl, videoFileName, duration);
+        logService.info("Created video file", channel);
         
         Video video = Video.builder()
             .channel(channel)
@@ -65,12 +84,13 @@ public class ViralBotOrchestrator {
             .scriptContent(script)
             .audioFilePath(audioPath)
             .videoFilePath(videoPath)
-            .durationSeconds(config.getVideo().getDuration())
+            .durationSeconds(duration)
             .build();
         
         uploadToPlatforms(video);
         
-        System.out.println("Successfully processed channel: " + channel);
+        log.info("Successfully processed channel: " + channel);
+        logService.info("Successfully processed channel", channel);
     }
     
     private void uploadToPlatforms(Video video) {
@@ -80,28 +100,19 @@ public class ViralBotOrchestrator {
                 video.getTitle(),
                 video.getDescription()
             );
-            System.out.println("Uploaded to YouTube Shorts: " + youtubeId);
+            log.info("Uploaded to YouTube Shorts: " + youtubeId);
+            logService.info("Uploaded to YouTube Shorts: " + youtubeId, video.getChannel());
         } catch (Exception e) {
-            System.err.println("Failed to upload to YouTube: " + e.getMessage());
-        }
-        
-        try {
-            String tiktokId = tiktokService.uploadVideo(
-                video.getVideoFilePath(),
-                video.getTitle(),
-                video.getDescription()
-            );
-            System.out.println("Uploaded to TikTok: " + tiktokId);
-        } catch (Exception e) {
-            System.err.println("Failed to upload to TikTok: " + e.getMessage());
+            log.severe("Failed to upload to YouTube: " + e.getMessage());
+            logService.error("Failed to upload to YouTube: " + e.getMessage(), video.getChannel());
         }
     }
     
     private String generateTitle(String channel) {
         return switch (channel.toLowerCase()) {
-            case "boxing" -> "Boxing Legend Motivation 🥊";
+            case "finance" -> "💰 Investing Tip You NEED to Know";
+            case "business" -> "💼 Side Hustle That Actually Works";
             case "tech" -> "Amazing Tech Tip You Need to Know!";
-            case "motivation" -> "Daily Motivation to Transform Your Life";
             case "facts" -> "Mind-Blowing Fact You Won't Believe";
             default -> channel + " Content";
         };

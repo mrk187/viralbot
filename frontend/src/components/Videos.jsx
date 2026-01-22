@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 
 export default function Videos() {
+  const { t } = useTranslation();
   const [videos, setVideos] = useState([]);
 
   useEffect(() => {
@@ -18,12 +20,12 @@ export default function Videos() {
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Delete this video?')) {
+    if (confirm(t('videos.confirmDelete'))) {
       try {
         await api.deleteVideo(id);
         loadVideos();
       } catch (error) {
-        alert('Error deleting video');
+        alert(t('videos.deleteError'));
       }
     }
   };
@@ -31,7 +33,7 @@ export default function Videos() {
   return (
     <div>
       <div className="terminal-box">
-        <div className="terminal-box-title">╔═══ VIDEO LIBRARY ({videos.length} videos) ═══╗</div>
+        <div className="terminal-box-title">╔═══ {t('videos.library')} ({t('videos.videosCount', { count: videos.length })}) ═══╗</div>
       </div>
 
       <div className="video-grid">
@@ -39,24 +41,18 @@ export default function Videos() {
           <div key={video.id} className="video-card">
             <div className="video-title">&gt; {video.title}</div>
             <div style={{ fontSize: '0.9rem', marginBottom: '10px' }}>
-              Channel: {video.channel} | {new Date(video.createdAt).toLocaleString()}
+              {t('videos.channel')}: {video.channel} | {new Date(video.createdAt).toLocaleString()}
             </div>
             
             {video.youtubeUrl && (
               <a href={video.youtubeUrl} target="_blank" rel="noopener noreferrer" className="video-link">
-                [✓] YouTube: {video.youtubeUrl}
-              </a>
-            )}
-            
-            {video.tiktokUrl && (
-              <a href={video.tiktokUrl} target="_blank" rel="noopener noreferrer" className="video-link">
-                [✓] TikTok: {video.tiktokUrl}
+                [✓] {t('videos.youtube')}: {video.youtubeUrl}
               </a>
             )}
             
             <div style={{ marginTop: '10px' }}>
               <button className="button-primary" onClick={() => handleDelete(video.id)}>
-                [DELETE]
+                [{t('videos.delete')}]
               </button>
             </div>
           </div>

@@ -7,15 +7,19 @@ import com.viralbot.config.ViralBotConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
 public class TextToSpeechService {
+    
+    private static final Logger log = Logger.getLogger(TextToSpeechService.class.getName());
     
     private final ViralBotConfig config;
     
@@ -55,12 +59,11 @@ public class TextToSpeechService {
             
             textToSpeechClient.close();
             
-            System.out.println("Audio generated: " + outputPath);
+            log.info("Audio generated: " + outputPath);
             return outputPath;
             
         } catch (Exception e) {
-            System.err.println("Error generating audio: " + e.getMessage());
-            e.printStackTrace();
+            log.severe("Error generating audio: " + e.getMessage());
             throw new RuntimeException("Failed to generate audio", e);
         }
     }

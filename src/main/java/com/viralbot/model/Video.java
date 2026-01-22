@@ -38,9 +38,7 @@ public class Video {
     
     private String youtubeVideoId;
     private String youtubeUrl;
-    private String tiktokShareId;
-    private String tiktokUrl;
-    
+
     private LocalDateTime createdAt;
     private LocalDateTime uploadedAt;
     

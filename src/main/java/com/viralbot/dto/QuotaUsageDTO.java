@@ -14,8 +14,7 @@ public class QuotaUsageDTO {
     private QuotaInfo googleTts;
     private QuotaInfo pexels;
     private QuotaInfo youtube;
-    private QuotaInfo tiktok;
-    
+
     @Data
     @Builder
     @NoArgsConstructor

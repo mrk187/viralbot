@@ -1,6 +1,6 @@
 # ViralBot - Automated Social Media Content Generator
 
-Automated video content generation and publishing system for TikTok and YouTube Shorts using 100% free-tier services.
+Automated video content generation and publishing system for YouTube Shorts using 100% free-tier services.
 
 ## Free Tier Plan
 
@@ -33,9 +33,6 @@ Automated video content generation and publishing system for TikTok and YouTube 
 #### Social Media APIs
 - **YouTube Data API v3** (Free: 10,000 units/day)
   - Setup: https://console.cloud.google.com/
-  - Cost: FREE
-- **TikTok API** (Free tier available)
-  - Setup: https://developers.tiktok.com/
   - Cost: FREE
 
 #### Hosting Options
@@ -80,12 +77,6 @@ brew install maven
 3. Create OAuth 2.0 credentials
 4. Download credentials JSON
 
-#### TikTok API
-1. Visit https://developers.tiktok.com/
-2. Create app
-3. Get client key and secret
-4. Generate access token
-
 ### 3. Configuration
 
 Create `.env` file or set environment variables:
@@ -104,11 +95,6 @@ export PEXELS_API_KEY=your_pexels_api_key
 export YOUTUBE_CLIENT_ID=your_youtube_client_id
 export YOUTUBE_CLIENT_SECRET=your_youtube_client_secret
 export YOUTUBE_CREDENTIALS_PATH=/path/to/youtube-credentials.json
-
-# TikTok
-export TIKTOK_CLIENT_KEY=your_tiktok_client_key
-export TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
-export TIKTOK_ACCESS_TOKEN=your_tiktok_access_token
 ```
 
 ### 4. Build and Run
@@ -158,8 +144,7 @@ ViralBot/
 │   │   ├── MediaService.java             # Image fetching
 │   │   └── VideoCreationService.java     # FFmpeg video creation
 │   └── platform/
-│       ├── YouTubeService.java           # YouTube Shorts upload
-│       └── TikTokService.java            # TikTok upload
+│       └── YouTubeService.java           # YouTube Shorts upload
 └── src/main/resources/
     └── application.properties            # Configuration
 ```
@@ -182,7 +167,6 @@ viralbot.channel.facts.description=Interesting facts and trivia
 - Google TTS: ~33k characters/day
 - Pexels: 200 requests/hour
 - YouTube: 10,000 units/day (~100 uploads)
-- TikTok: Varies by tier
 
 ### Staying Within Free Tier
 - Generate 30-60 videos/day
@@ -191,7 +175,6 @@ viralbot.channel.facts.description=Interesting facts and trivia
   - ~500-1000 TTS characters
   - 5 Pexels image requests
   - 1 YouTube upload (~50 units)
-  - 1 TikTok upload
 
 ## Deployment
 

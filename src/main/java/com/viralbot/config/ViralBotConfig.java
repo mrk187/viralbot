@@ -16,7 +16,6 @@ public class ViralBotConfig {
     private MediaConfig media;
     private FfmpegConfig ffmpeg;
     private YoutubeConfig youtube;
-    private TiktokConfig tiktok;
     private ScheduleConfig schedule;
 
     public List<String> getChannels() { return channels; }
@@ -35,8 +34,6 @@ public class ViralBotConfig {
     public void setFfmpeg(FfmpegConfig ffmpeg) { this.ffmpeg = ffmpeg; }
     public YoutubeConfig getYoutube() { return youtube; }
     public void setYoutube(YoutubeConfig youtube) { this.youtube = youtube; }
-    public TiktokConfig getTiktok() { return tiktok; }
-    public void setTiktok(TiktokConfig tiktok) { this.tiktok = tiktok; }
     public ScheduleConfig getSchedule() { return schedule; }
     public void setSchedule(ScheduleConfig schedule) { this.schedule = schedule; }
     
@@ -100,10 +97,13 @@ public class ViralBotConfig {
     public static class MediaConfig {
         private PexelsConfig pexels;
         private int imagesPerVideo;
+        private int imageDuration;
         public PexelsConfig getPexels() { return pexels; }
         public void setPexels(PexelsConfig pexels) { this.pexels = pexels; }
         public int getImagesPerVideo() { return imagesPerVideo; }
         public void setImagesPerVideo(int imagesPerVideo) { this.imagesPerVideo = imagesPerVideo; }
+        public int getImageDuration() { return imageDuration; }
+        public void setImageDuration(int imageDuration) { this.imageDuration = imageDuration; }
     }
     
     public static class PexelsConfig {
@@ -137,18 +137,6 @@ public class ViralBotConfig {
         public void setCategoryId(String categoryId) { this.categoryId = categoryId; }
         public String getPrivacyStatus() { return privacyStatus; }
         public void setPrivacyStatus(String privacyStatus) { this.privacyStatus = privacyStatus; }
-    }
-    
-    public static class TiktokConfig {
-        private String clientKey;
-        private String clientSecret;
-        private String accessToken;
-        public String getClientKey() { return clientKey; }
-        public void setClientKey(String clientKey) { this.clientKey = clientKey; }
-        public String getClientSecret() { return clientSecret; }
-        public void setClientSecret(String clientSecret) { this.clientSecret = clientSecret; }
-        public String getAccessToken() { return accessToken; }
-        public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
     }
     
     public static class ScheduleConfig {

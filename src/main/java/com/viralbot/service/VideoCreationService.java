@@ -3,6 +3,7 @@ package com.viralbot.service;
 import com.viralbot.config.ViralBotConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -10,75 +11,64 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
 public class VideoCreationService {
     
+    private static final Logger log = Logger.getLogger(VideoCreationService.class.getName());
+    
     private final ViralBotConfig config;
     
-    public String createVideo(String audioPath, String backgroundVideoUrl, String outputFileName) {
+    public String createVideoFromBackgroundVideo(String audioPath, String videoUrl, String outputFileName, int targetDuration) {
+        Path tempDir = Paths.get(config.getFfmpeg().getTempDir());
+        
         try {
-            Path tempDir = Paths.get(config.getFfmpeg().getTempDir());
             Files.createDirectories(tempDir);
             
-            // Download background video
+            // Download video
             String videoPath = tempDir.resolve("background.mp4").toString();
-            ProcessBuilder downloadPb = new ProcessBuilder("curl", "-o", videoPath, backgroundVideoUrl);
-            downloadPb.start().waitFor();
-            System.out.println("Downloaded background video");
+            ProcessBuilder pb = new ProcessBuilder("curl", "-L", "-m", "60", "-o", videoPath, videoUrl);
+            if (!pb.start().waitFor(65, java.util.concurrent.TimeUnit.SECONDS)) {
+                throw new RuntimeException("Video download timeout");
+            }
+            log.info("Downloaded background video");
             
             String outputPath = tempDir.resolve(outputFileName + ".mp4").toString();
+            String[] res = config.getVideo().getResolution().split("x");
             
-            List<String> command = new ArrayList<>();
-            command.add(config.getFfmpeg().getPath());
-            command.add("-y");
-            command.add("-stream_loop");
-            command.add("-1"); // Loop video indefinitely
-            command.add("-i");
-            command.add(videoPath);
-            command.add("-i");
-            command.add(audioPath);
-            command.add("-filter_complex");
-            command.add("[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[v]");
-            command.add("-map");
-            command.add("[v]");
-            command.add("-map");
-            command.add("1:a");
-            command.add("-c:v");
-            command.add("libx264");
-            command.add("-c:a");
-            command.add("aac");
-            command.add("-shortest"); // Stop when audio ends
-            command.add("-pix_fmt");
-            command.add("yuv420p");
-            command.add(outputPath);
+            // FFmpeg: trim video, add audio, crop to portrait
+            List<String> cmd = new ArrayList<>();
+            cmd.add(config.getFfmpeg().getPath());
+            cmd.add("-y");
+            cmd.add("-i"); cmd.add(videoPath);
+            cmd.add("-i"); cmd.add(audioPath);
+            cmd.add("-t"); cmd.add(String.valueOf(targetDuration));
+            cmd.add("-vf"); cmd.add(String.format("scale=%s:%s:force_original_aspect_ratio=increase,crop=%s:%s,fps=%d", 
+                res[0], res[1], res[0], res[1], config.getVideo().getFps()));
+            cmd.add("-c:v"); cmd.add("libx264");
+            cmd.add("-c:a"); cmd.add("aac");
+            cmd.add("-shortest");
+            cmd.add("-pix_fmt"); cmd.add("yuv420p");
+            cmd.add(outputPath);
             
-            System.out.println("FFmpeg command: " + String.join(" ", command));
+            log.info("FFmpeg: " + String.join(" ", cmd));
             
-            ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-            
-            // Log output in real-time
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println("FFmpeg: " + line);
-                }
+            Process proc = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+                r.lines().forEach(log::info);
             }
             
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                System.out.println("Video created successfully: " + outputPath);
-                return outputPath;
-            } else {
-                throw new RuntimeException("FFmpeg process failed with exit code: " + exitCode);
-            }
+            if (proc.waitFor() != 0) throw new RuntimeException("FFmpeg failed");
+            
+            Files.deleteIfExists(Path.of(videoPath));
+            
+            log.info("Video created: " + outputPath);
+            return outputPath;
             
         } catch (Exception e) {
-            System.err.println("Error creating video: " + e.getMessage());
-            e.printStackTrace();
+            log.severe("Error: " + e.getMessage());
             throw new RuntimeException("Failed to create video", e);
         }
     }

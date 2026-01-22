@@ -1,3 +1,4 @@
+import './i18n';
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
@@ -6,36 +7,39 @@ import Logs from './components/Logs';
 import Settings from './components/Settings';
 import './terminal.css';
 
+import { useTranslation } from 'react-i18next';
+
 function Navigation() {
   const location = useLocation();
+  const { t } = useTranslation();
   
   return (
     <div className="terminal-header">
       <div className="terminal-title" style={{ fontSize: '2rem', fontWeight: 'bold', letterSpacing: '0.1em' }}>
-        VIRALBOT
+        {t('app.title')}
       </div>
       <div style={{ fontSize: '0.9rem', marginTop: '10px' }}>
-        &gt; Automated Content Generation System v1.0.0
+        &gt; {t('app.subtitle')}
       </div>
       <nav className="terminal-nav">
         <Link to="/">
           <button className={`nav-button ${location.pathname === '/' ? 'active' : ''}`}>
-            [DASHBOARD]
+            [{t('nav.dashboard')}]
           </button>
         </Link>
         <Link to="/videos">
           <button className={`nav-button ${location.pathname === '/videos' ? 'active' : ''}`}>
-            [VIDEOS]
+            [{t('nav.videos')}]
           </button>
         </Link>
         <Link to="/logs">
           <button className={`nav-button ${location.pathname === '/logs' ? 'active' : ''}`}>
-            [LOGS]
+            [{t('nav.logs')}]
           </button>
         </Link>
         <Link to="/settings">
           <button className={`nav-button ${location.pathname === '/settings' ? 'active' : ''}`}>
-            [SETTINGS]
+            [{t('nav.settings')}]
           </button>
         </Link>
       </nav>
